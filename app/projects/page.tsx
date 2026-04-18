@@ -190,9 +190,18 @@ export default function ProjectsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // IntersectionObserver is far cheaper than a raw scroll listener:
-    // it fires only when section visibility changes, not on every scroll tick,
-    // and never forces a layout recalc via getBoundingClientRect().
+    // Scroll to top on mount unless a hash anchor is present.
+    // Next.js can restore a previous scroll position between navigations,
+    // which would drop the user mid-page into the wrong section.
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+    }
+
+    // IntersectionObserver: fires only when section visibility changes,
+    // never forces a layout recalc via getBoundingClientRect().
+    // rootMargin '-30% 0px -30% 0px' = detect the middle 40% of the viewport,
+    // so the active section switches when it occupies that centre band.
+    // (The old '-40% 0px -60% 0px' summed to 100% = zero-height zone → broken.)
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -201,8 +210,7 @@ export default function ProjectsPage() {
           }
         });
       },
-      // Trigger when the section crosses the middle of the viewport
-      { rootMargin: '-40% 0px -60% 0px' }
+      { rootMargin: '-30% 0px -30% 0px' }
     );
 
     const sections = document.querySelectorAll('.domain-section');
